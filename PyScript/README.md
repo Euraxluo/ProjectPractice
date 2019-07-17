@@ -402,6 +402,179 @@ myqr.run(
    | save_dir| 存储位置 | str，默认存储位置是当前目录|
 
 
+## python 的压缩函数API
+```python
+import lz4.frame
+import os
+import zipfile
+import tarfile
 
+class Compress(object):
 
+    @staticmethod
+    def lz4(compress:str,data:bytes,mode='wb')->bool:
+        """
+        使用lz4进行数据压缩
+        ;param compress,压缩数据的存储文件路径
+        ;param data,压缩数据
+        ;param mode，写入模式
+        """
+        try:
+            with lz4.frame.open(compress,mode=mode,content_checksum=False) as fp:
+                if type(data).__name__ != 'bytes':
+                    data = data.encode('utf-8')
+                bytes_written = fp.write(data)
+                return bytes_written == len(data)
+        except FileNotFoundError as e:
+            print(str(e))
+            return False
 
+    @staticmethod
+    def unlz4(dumpFilePath:str,decompress:str = None)->bool:
+        """
+        使用lz4压缩算法解压
+        ;param dumpFilePath,压缩文件的路径
+        ;param dumpFilePath，解压数据的存储地址
+        """
+        try:
+            with lz4.frame.open(dumpFilePath,mode='r',content_checksum=True) as fp:
+                output_data = fp.read()
+                with open(decompress,'wb') as wf:
+                    wf.write(output_data)
+                return True
+        except RuntimeError as e:
+            print('file lz4-decompress faild')
+            return False
+        except FileNotFoundError as fnfe:
+            print(str(fnfe))
+            return False
+
+    @staticmethod
+    def lz4F(filePath,compressFilePath):
+        """
+        lz4的压缩文件函数
+        ;param filePath
+        ;param compressFilePath
+        """
+        try:
+            i=0
+            with open(filePath,'rb') as f:
+                for line in f:
+                    Compress.lz4(compressFilePath,line,'ab')
+            return True
+        except StopIteration as e:
+            print(str(e))
+
+    @staticmethod
+    def zip(filepath,zipname,format):
+        """
+        文件压缩
+        ;param filepath,待压缩的路径/文件
+        ;param zipname,压缩后的文件名/路径
+        ;param format,后缀名
+        """
+        if  not  os.path.isdir(filepath):
+            zipName=zipname+"."+format
+            zipName=zipName.decode("utf-8")
+            filepath=filepath.decode("utf-8")
+            root,file=os.path.split(filepath)
+            #os.chdir(rootname)
+            f = zipfile.ZipFile(zipName, 'w', zipfile.ZIP_DEFLATED)
+            f.write(file)
+            f.close()
+        else:
+            zipName=zipname+"."+format
+            if type(zipName).__name__ == 'bytes' or type(filepath).__name__=='bytes':
+                zipName=zipName.decode("utf-8")
+                filepath=filepath.decode("utf-8")
+            f = zipfile.ZipFile(zipName, 'w', zipfile.ZIP_DEFLATED)
+            current=os.path.abspath(os.path.join(filepath,".."))
+            os.chdir(current)
+            filepath=filepath.replace("\\",'/')
+            currentRoot=filepath.split("/")[-1]
+            print(currentRoot)
+            for root, dirs, files in os.walk(currentRoot):
+                for file in files:
+                    f.write(os.path.join(root,file))
+            f.close()
+    
+    @staticmethod
+    def unzip(filepath,savepath=''):
+        """
+        文件解压缩
+        ;param filepath,待解压缩的文件
+        ;param zipname,解压缩后的文件名/路径
+        """
+        if type(filepath).__name__ != 'str' :
+            filepath=filepath.decode("utf-8")
+        if type(savepath).__name__ != 'str' :
+            savepath=savepath.decode("utf-8")
+        f = zipfile.ZipFile(filepath,'r')
+        for file in f.namelist():
+            f.extract(file,savepath)
+
+    @staticmethod
+    def zipF(filePath,compressFilePath):
+        """
+        lz4的压缩文件函数
+        :param filePath
+        :param compressFilePath
+        """
+        try:
+            i=0
+            with open(filePath,'rb') as f:
+                for line in f:
+                    Compress.zip(compressFilePath,line,'ab')
+            return True
+        except StopIteration as e:
+            print(str(e))
+
+    @staticmethod
+    def tar(compress:str,files:str,mod='w')->bool:
+        """
+        tar打包
+        ;param compress,打包后的文件名
+        ;param files,待打包的文件
+        """
+        try:
+            _,path=os.path.split(files)
+            with tarfile.open(compress,mod) as tp:
+                bytes_written = tp.add(files,arcname = path)
+                # return bytes_written == len()
+        except FileNotFoundError as e:
+            print(str(e))
+            return False
+
+    @staticmethod
+    def untar(compress:str,decompress:str = None)->bool:
+        """
+        tar解包
+        ;param compress,tar压缩文件
+        ;param decompress,解压后的文件
+        """
+        try:
+            if not decompress:
+                decompress = os.path.split(compress)
+            with tarfile.open(compress,'r') as tp:
+                tp.extractall(decompress)
+        except RuntimeError as e:
+            print(str(e))
+            return False
+if __name__ == "__main__":
+    
+    #使用lz4将1.md压缩到1_lz.md,然后又解压到1_decom.md
+    # Compress().lz4F('testdir/1.md','testdir/1_lz.md')
+    # Compress().unlz4('testdir/1_lz.md','testdir/1_decom.md')
+
+    #使用zip来进行压缩和解压缩
+    # Compress().zip('testdir','t','zip')
+    # Compress().unzip('t.zip','testdirunzip')
+
+    #使用tar来进行文件打包,将1.md，2.md压缩，再解压到testdir/test下
+    Compress.tar('testdir/file.tar.gz','testdir/1.md','w')
+    Compress.tar('testdir/file.tar.gz','testdir/2.md','a')
+    Compress().untar('testdir/file.tar.gz','testdir/test')
+```
+写的过程的注意点：
+1. 文件读取，一般来说使用`with open()`即可，因为with对整个读取过程进行管理，但是当一行的数据非常大时，我们就需要使用open(file,mode,buf),来对缓冲区进行管理，但是比较容易出错（我就出错了。。。）
+2. tar函数好像不能直接压缩数据，需要先写入其他文件中
