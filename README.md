@@ -5,7 +5,8 @@
 mmall 是一个使用springmvc，spring，mybatis实现的一个购物网站。
 采用单点登录,并接入了支付宝,功能完整，接口测试通过，但是没有使用做前端,接口全部测试过,莫得问题
 
-
+## Yii study project :blog
+Yii实现的blog应用,基本功能完善.
 
 ##  jdbc+servlet+jsp+ajax+Smantic-UI
 主要是Semantic-UI实现了一个CMS模板,对其中的手机电话号验证,验证码验证进行了实现,还完成了Semantic-UI的表单验证，cms主要页面.iframe实现的页面跳转和扩展.使用的jsp实现的分页
@@ -30,6 +31,8 @@ py脚本，之前写的py的一些东西会迁移过来
 
 ## DesignPatternInJAVA
 23种设计模式java实现
+
+
 
 ## 真正的开源项目会有的，一定会有的
 
