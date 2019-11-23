@@ -1,0 +1,27 @@
+plugins {
+    id 'java'
+}
+
+group 'FSWFrame.euraxluo.cn'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    compile(project(':framework'))//依赖我们的framework模块
+}
+jar{
+    manifest{
+        attributes "Main-Class":"FSWFrame.euraxluo.cn.Application" //申明主类
+    }
+    from{
+        configurations.compile.collect{
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+}
