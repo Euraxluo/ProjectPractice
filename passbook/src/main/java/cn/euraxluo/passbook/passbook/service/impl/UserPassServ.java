@@ -1,27 +1,30 @@
 package cn.euraxluo.passbook.passbook.service.impl;
 
+import cn.euraxluo.passbook.passbook.constant.Constants;
 import cn.euraxluo.passbook.passbook.constant.HBaseTables;
+import cn.euraxluo.passbook.passbook.constant.PassStatus;
 import cn.euraxluo.passbook.passbook.dao.MerchantsDao;
 import cn.euraxluo.passbook.passbook.entity.Merchants;
+import cn.euraxluo.passbook.passbook.mapper.PassRowMapper;
 import cn.euraxluo.passbook.passbook.service.IUserPassServ;
 import cn.euraxluo.passbook.passbook.vo.Pass;
+import cn.euraxluo.passbook.passbook.vo.PassInfo;
 import cn.euraxluo.passbook.passbook.vo.PassTemplate;
 import cn.euraxluo.passbook.passbook.vo.Response;
+import com.alibaba.fastjson.JSON;
 import com.spring4all.spring.boot.starter.hbase.api.HbaseTemplate;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.filter.*;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.ws.rs.GET;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -48,26 +51,119 @@ public class UserPassServ implements IUserPassServ {
 
     @Override
     public Response getUserPassInfo(Long userId) throws Exception {
-        return null;
+        return getPassInfoByStatus(userId,PassStatus.UNUSED);
     }
 
     @Override
     public Response getUserUsedPassInfo(Long userId) throws Exception {
-        return null;
+        return getPassInfoByStatus(userId,PassStatus.USED);;
     }
 
     @Override
     public Response getUserAllPassInfo(Long userId) throws Exception {
-        return null;
+        return getPassInfoByStatus(userId,PassStatus.ALL);;
     }
 
     @Override
     public Response userUsePass(Pass pass) {
-        return null;
+        byte[] rowPrefix = Bytes.toBytes(new StringBuilder(
+                String.valueOf(pass.getUserId())
+        ).reverse().toString());
+        Scan scan = new Scan();
+        List<Filter> filters = new ArrayList<>();
+        filters.add(new PrefixFilter(rowPrefix));
+        //判断是否相等
+        filters.add(new SingleColumnValueFilter(
+                HBaseTables.PassTable.FAMILY_I.getBytes(),
+                HBaseTables.PassTable.TEMPLATE_ID.getBytes(),
+                CompareFilter.CompareOp.EQUAL,
+                Bytes.toBytes(pass.getTemplateId())
+        ));
+        filters.add(new SingleColumnValueFilter(
+                HBaseTables.PassTable.FAMILY_I.getBytes(),
+                HBaseTables.PassTable.CON_DATE.getBytes(),
+                CompareFilter.CompareOp.EQUAL,
+                Bytes.toBytes("-1")
+        ));
+
+        //传入优惠券信息,在数据库中寻找一个存在且未使用优惠券,然后设置CON_DATE,标志使用
+        //设置过滤器
+        scan.setFilter(new FilterList(filters));
+        List<Pass> passes = hbaseTemplate.find(HBaseTables.PassTable.TABLE_NAME,
+                scan,new PassRowMapper());
+        if (null == passes || passes.size() != 1){
+            log.error("UserUsePass Error: {}", JSON.toJSONString(pass));
+            return Response.failure("UserUsePass Error");
+        }
+        byte[] FAMILY_I = HBaseTables.PassTable.FAMILY_I.getBytes();
+        byte[] CON_DATE = HBaseTables.PassTable.CON_DATE.getBytes();
+
+        List<Mutation> datas = new ArrayList<>();
+        Put put = new Put(passes.get(0).getRowKey().getBytes());
+        put.addColumn(FAMILY_I,CON_DATE,
+                Bytes.toBytes(DateFormatUtils.ISO_DATE_FORMAT.format(new Date()));
+        datas.add(put);
+
+        hbaseTemplate.saveOrUpdates(HBaseTables.PassTable.TABLE_NAME,datas);
+
+        return Response.success();
     }
 
+    /**
+     * 根据优惠券状态获取优惠券信息
+     * @param userId
+     * @param status
+     * @return
+     * @throws Exception
+     */
+    private Response getPassInfoByStatus(Long userId, PassStatus status) throws Exception {
+        //根据userId 构造行键前缀
+        byte[] rowPrefix = Bytes.toBytes(new StringBuilder(String.valueOf(userId)).reverse().toString());
+        CompareFilter.CompareOp compareOp =
+                status == PassStatus.UNUSED?
+                        CompareFilter.CompareOp.EQUAL: CompareFilter.CompareOp.NOT_EQUAL;
+        //扫描器
+        Scan scan = new Scan();
+        List<Filter> filters = new ArrayList<>();
+        //1. 行键前缀过滤器,找到特定用户的优惠券
+        filters.add(new PrefixFilter(rowPrefix));
+        //2. 基于行单元值的过滤器,找到未使用的优惠券
+        if(status != PassStatus.ALL){
+            filters.add(new SingleColumnValueFilter(
+                    HBaseTables.PassTable.FAMILY_I.getBytes(),
+                    HBaseTables.PassTable.CON_DATE.getBytes(),
+                    compareOp, Bytes.toBytes("-1")
+            ));
+        }
+        //链式过滤
+        scan.setFilter(new FilterList(filters));
+        //find 操作
+        List<Pass> passes = hbaseTemplate.find(HBaseTables.PassTable.TABLE_NAME,scan,new PassRowMapper());
+        Map<String,PassTemplate> passTemplateMap = buildPassTemplateMap(passes);
+        Map<Integer,Merchants> merchantsMap = buildMerchantsMap(new ArrayList<>(passTemplateMap.values()));
+        //填充返回值
+        List<PassInfo> res = new ArrayList<>();
+        for (Pass pass:passes){
+            PassTemplate passTemplate = passTemplateMap.getOrDefault(
+                    pass.getTemplateId(),null
+            );
+            if (null == passTemplate){
+                log.error("PassTemplate Null: {}",pass.getTemplateId());
+                continue;
+            }
+            Merchants merchants = merchantsMap.getOrDefault(
+                    passTemplate.getId(),null
+            );
+            if ( null ==  merchants){
+                log.error("Merchants Null: {}",passTemplate.getId());
+                continue;
+            }
+            //填充用户领取的优惠券信息
+            res.add(new PassInfo(pass,passTemplate,merchants));
+        }
+        return new Response(res);
 
-//    private Response getPassInfo
+    }
 
     /**
      * 通过获取的Passes 对象构造Map
