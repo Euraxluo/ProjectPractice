@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
  * ConsumePassTemplate
  * 2019/12/29 17:28
  * author:Euraxluo
- * TODO
+ * Kafka消费者功能
  */
 @Slf4j
 @Component

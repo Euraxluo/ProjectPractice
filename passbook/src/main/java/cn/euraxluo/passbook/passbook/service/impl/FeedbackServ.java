@@ -24,7 +24,7 @@ import java.util.List;
  * FeedbackServ
  * 2019/12/29 22:18
  * author:Euraxluo
- * 评论功能实现
+ * 评论功能服务实现
  */
 @Slf4j
 @Service

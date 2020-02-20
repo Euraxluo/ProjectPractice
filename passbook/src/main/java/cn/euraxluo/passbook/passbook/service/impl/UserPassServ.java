@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
  * UserPassServ
  * 2019/12/30 9:49
  * author:Euraxluo
- * TODO
+ * 获取用户个人优惠券相关服务实现
  */
 @Slf4j
 @Service
@@ -51,21 +51,23 @@ public class UserPassServ implements IUserPassServ {
 
     @Override
     public Response getUserPassInfo(Long userId) throws Exception {
+        //利用我们封装的函数,通过指定状态实现
         return getPassInfoByStatus(userId,PassStatus.UNUSED);
     }
 
     @Override
     public Response getUserUsedPassInfo(Long userId) throws Exception {
-        return getPassInfoByStatus(userId,PassStatus.USED);;
+        return getPassInfoByStatus(userId,PassStatus.USED);
     }
 
     @Override
     public Response getUserAllPassInfo(Long userId) throws Exception {
-        return getPassInfoByStatus(userId,PassStatus.ALL);;
+        return getPassInfoByStatus(userId,PassStatus.ALL);
     }
 
     @Override
     public Response userUsePass(Pass pass) {
+        //根据UserId构造行键前缀,通过行键前缀进行查询
         byte[] rowPrefix = Bytes.toBytes(new StringBuilder(
                 String.valueOf(pass.getUserId())
         ).reverse().toString());
@@ -83,15 +85,15 @@ public class UserPassServ implements IUserPassServ {
                 HBaseTables.PassTable.FAMILY_I.getBytes(),
                 HBaseTables.PassTable.CON_DATE.getBytes(),
                 CompareFilter.CompareOp.EQUAL,
-                Bytes.toBytes("-1")
+                Bytes.toBytes("-1")//没有被消费设置为-1
         ));
 
         //传入优惠券信息,在数据库中寻找一个存在且未使用优惠券,然后设置CON_DATE,标志使用
         //设置过滤器
         scan.setFilter(new FilterList(filters));
         List<Pass> passes = hbaseTemplate.find(HBaseTables.PassTable.TABLE_NAME,
-                scan,new PassRowMapper());
-        if (null == passes || passes.size() != 1){
+                scan,new PassRowMapper());//只会找出来一个值
+        if (null == passes || 1 != passes.size()){
             log.error("UserUsePass Error: {}", JSON.toJSONString(pass));
             return Response.failure("UserUsePass Error");
         }
@@ -100,8 +102,7 @@ public class UserPassServ implements IUserPassServ {
 
         List<Mutation> datas = new ArrayList<>();
         Put put = new Put(passes.get(0).getRowKey().getBytes());
-        put.addColumn(FAMILY_I,CON_DATE,
-                Bytes.toBytes(DateFormatUtils.ISO_DATE_FORMAT.format(new Date()));
+        put.addColumn(FAMILY_I,CON_DATE, Bytes.toBytes(DateFormatUtils.ISO_DATE_FORMAT.format(new Date())));
         datas.add(put);
 
         hbaseTemplate.saveOrUpdates(HBaseTables.PassTable.TABLE_NAME,datas);

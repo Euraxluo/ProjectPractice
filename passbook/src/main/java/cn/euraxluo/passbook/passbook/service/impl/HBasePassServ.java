@@ -23,7 +23,7 @@ import java.io.IOException;
  * HBasePassServ
  * 2019/12/29 17:39
  * author:Euraxluo
- * TODO
+ * HBase相关服务实现,增删改查
  */
 @Slf4j
 @Service
