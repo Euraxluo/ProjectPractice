@@ -3,6 +3,11 @@
 
 ## JAVA
 
+#### CardBag
+
+基于HBase,Redis,Mysql,Spring-Boot的 CardBag 卡包后端开发demo
+,先是搭建了集群,遇到了很多问题,并一一解决,后面的问题主要在于Hbase的Mapper怎么建立,怎么使用HbaseTemplate以及StringRedisTemplate进行开发,以及卡包应用在使用Hbase后的整体架构.理清楚架构以及数据流,那么开发就没有问题了
+
 #### DesignPatternInJAVA
 23种设计模式java实现
 
