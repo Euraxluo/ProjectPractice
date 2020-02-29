@@ -1,6 +1,6 @@
 #### 启动:
-1. /usr/bin/fdfs-tracker conf
-2. /usr/bin/fdfs-storage conf
+1. /usr/bin/fdfs-tracker xxx.conf
+2. /usr/bin/fdfs-storage xxx.conf
 3. nginx
 4. mysql,Wss_demo 数据库
 
@@ -9,3 +9,7 @@
 2. 搜索自己时,提示不太正确
 3. 通讯录的查询比较慢
 4. 更换账号后,相关页面刷新很慢
+
+
+
+## springWx 是这个项目的前端
