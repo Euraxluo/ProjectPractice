@@ -1,0 +1,100 @@
+plugins {
+    id 'java'
+}
+
+group 'FSWFrame.euraxluo.cn'
+version '1.0'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    // https://mvnrepository.com/artifact/org.apache.tomcat.embed/tomcat-embed-core
+    compile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '8.5.23'
+    // https://mvnrepository.com/artifact/com.alibaba/fastjson
+    compile group: 'com.alibaba', name: 'fastjson', version: '1.2.62'
+    //Mybatis complete
+    compile group: 'org.mybatis', name: 'mybatis', version: '3.4.6'
+
+
+    //tk.mybatis
+    // https://mvnrepository.com/artifact/org.mybatis/mybatis
+    MybatisGeneratTask 'org.mybatis.generator:mybatis-generator-core:1.3.5'
+    // https://mvnrepository.com/artifact/tk.mybatis/mapper
+    MybatisGeneratTask 'tk.mybatis:mapper:4.0.4'
+    // https://mvnrepository.com/artifact/mysql/mysql-connector-java
+    MybatisGeneratTask 'mysql:mysql-connector-java:5.1.6'
+
+
+}
+
+def getDbProperties = {
+    def properties = new Properties()
+    file("src/main/resources/config.properties").withInputStream { inputStream ->
+        properties.load(inputStream)
+    }
+    properties
+}
+
+def getProperties = {
+    def properties = ResourceBundle.getBundle("config").
+            properties.getString()
+}
+
+
+task MybatisGeneratTask << {
+    def properties = getDbProperties()
+//    ant.properties['driverClass'] = properties.getString("mybatis.driverClass")
+//    ant.properties['connectionURL'] = properties.getString("mybatis.connectionURL")
+//    ant.properties['userId'] = properties.getString("mybatis.userId")
+//    ant.properties['password'] = properties.getString("mybatis.password")
+//    ant.properties['javaClientType'] = properties.getString("mybatis.javaClientGenerator.Type")
+//    ant.properties['javaClientPackage'] = properties.getString("mybatis.javaClientGenerator.Package")
+//    ant.properties['javaClientProject'] = properties.getString("mybatis.javaClientGenerator.Project")
+//    ant.properties['modelPackage'] = properties.getString("mybatis.javaModelGenerator.Package")
+//    ant.properties['modelProject'] = properties.getString("mybatis.javaModelGenerator.Project")
+//    ant.properties['sqlMapPackage'] = properties.getString("mybatis.sqlMapGenerator.Package")
+//    ant.properties['sqlMapProject'] = properties.getString("mybatis.sqlMapGenerator.Project")
+
+    ant.properties['driverClass'] = properties.getProperty("mybatis.driverClass")
+    ant.properties['connectionURL'] = properties.getProperty("mybatis.connectionURL")
+    ant.properties['userId'] = properties.getProperty("mybatis.userId")
+    ant.properties['password'] = properties.getProperty("mybatis.password")
+    ant.properties['javaClientType'] = properties.getProperty("mybatis.javaClientGenerator.Type")
+    ant.properties['javaClientPackage'] = properties.getProperty("mybatis.javaClientGenerator.Package")
+    ant.properties['javaClientProject'] = properties.getProperty("mybatis.javaClientGenerator.Project")
+    ant.properties['modelPackage'] = properties.getProperty("mybatis.javaModelGenerator.Package")
+    ant.properties['modelProject'] = properties.getProperty("mybatis.javaModelGenerator.Project")
+    ant.properties['sqlMapPackage'] = properties.getProperty("mybatis.sqlMapGenerator.Package")
+    ant.properties['sqlMapProject'] = properties.getProperty("mybatis.sqlMapGenerator.Project")
+    ant.taskdef(
+            name: 'MybatisGeneratAntTaskName',
+            classname: 'org.mybatis.generator.ant.GeneratorAntTask',
+            classpath: configurations.mybatisGenerator.asPath
+    )
+    ant.MybatisGeneratAntTaskName(
+            overwrite: true,
+            configfile: 'src/main/resources/MybatisGeneratConfig.xml',
+            verbose: true){
+        propertyset {
+            propertyref(name: 'driverClass')
+            propertyref(name: 'connectionURL')
+            propertyref(name: 'userId')
+            propertyref(name: 'password')
+
+            propertyref(name: 'javaClientType')
+            propertyref(name: 'javaClientPackage')
+            propertyref(name: 'javaClientProject')
+
+            propertyref(name: 'modelPackage')
+            propertyref(name: 'modelProject')
+
+            propertyref(name: 'sqlMapPackage')
+            propertyref(name: 'sqlMapProject')
+        }
+    }
+}
