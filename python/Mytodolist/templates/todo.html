@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Backbone.js Todos</title>
+    <link rel="stylesheet" href="{{url_for('static', filename='todos.css')}}"/>
+    <style>
+        .hidden-input {
+            opacity: 0;
+            position: absolute;
+            z-index: -1;
+        }
+
+        input[type=checkbox] + span {
+            /* your style goes here */
+            display: inline-block;
+            height: 1em;
+            width: 1em;
+            border-radius: 10px;
+            /*border-bottom: 0px;*/
+            background-color:gainsboro;
+        }
+
+        /* active style goes here */
+        input[type=checkbox]:checked + span {
+            background-color: yellowgreen;
+        }
+
+    </style>
+</head>
+
+<body>
+<div id="todoapp">
+    <header>
+        <h1>Tori</h1>
+        <input id="new-todo" type="text" placeholder="What needs to be done?">
+    </header>
+
+    <section id="main">
+        <label for="toggle-all">
+            <input class="hidden-input" id="toggle-all" style="" type="checkbox"/>
+            <span class="your style about checkbox"></span>
+            Mark all as complete
+        </label>
+        <ul id="todo-list"></ul>
+    </section>
+
+    <footer>
+        <a id="clear-completed">Clear completed</a>
+        <div id="todo-count"></div>
+    </footer>
+</div>
+
+<div id="instructions">
+    Double-click to edit a todo.
+</div>
+<script src="{{url_for('static', filename='json2.js')}}"></script>
+<script src="{{url_for('static', filename='jquery.js')}}"></script>
+<script src="{{url_for('static', filename='underscore.js')}}"></script>
+<script src="{{url_for('static', filename='backbone-min.js')}}"></script>
+<script src="{{url_for('static', filename='todos.js')}}"></script>
+<script type="text/template" id="item-template">
+    <div class="view">
+
+        <label>
+            <input class="hidden-input toggle" style="" type="checkbox" <%= done ? 'checked="checked"' : '' %> />
+            <span class="your style about checkbox"></span>
+            <%- title %></label>
+        <a class="destroy">
+        </a>
+    </div>
+    <input class="edit" type="text" value="<%- title %>"/>
+</script>
+
+<script type="text/template" id="stats-template">
+    <% if (done) { %>
+    <a id="clear-completed">Clear <%= done %> completed <%= done == 1 ? 'item' : 'items' %></a>
+    <% } %>
+    <div class="todo-count"><b><%= remaining %></b> <%= remaining == 1 ? 'item' : 'items' %> left</div>
+</script>
+
+</body>
+</html>

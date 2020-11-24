@@ -1,0 +1,4 @@
+rootProject.name = 'fast-start-web-framework'
+include 'framework'
+include 'test'
+

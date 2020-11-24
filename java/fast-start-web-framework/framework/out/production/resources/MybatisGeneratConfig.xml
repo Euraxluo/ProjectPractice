@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+        PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+<generatorConfiguration>
+    <!--<properties resource="config.properties"></properties>-->
+    <context id="Mysql" targetRuntime="MyBatis3Simple" defaultModelType="flat">
+        <commentGenerator>
+            <property name="suppressAllComments" value="true"></property>
+            <property name="suppressDate" value="true"></property>
+            <property name="javaFileEncoding" value="utf-8"/>
+        </commentGenerator>
+
+        <jdbcConnection driverClass="${mybatis.driverClass}"
+                        connectionURL="${mybatis.connectionURL}"
+                        userId="${mybatis.userId}"
+                        password="${mybatis.password}">
+        </jdbcConnection>
+
+        <javaTypeResolver>
+            <property name="forceBigDecimals" value="false"/>
+        </javaTypeResolver>
+
+        <javaModelGenerator targetPackage="${mybatis.javaModelGenerator.Package}" targetProject="${mybatis.javaModelGenerator.Project}">
+            <property name="enableSubPackages" value="true"></property>
+            <property name="trimStrings" value="true"></property>
+        </javaModelGenerator>
+
+        <sqlMapGenerator targetPackage="${mybatis.sqlMapGenerator.Package}" targetProject="${mybatis.sqlMapGenerator.Project}">
+            <property name="enableSubPackages" value="true"></property>
+        </sqlMapGenerator>
+        <!--type="XMLMAPPER"-->
+        <javaClientGenerator targetPackage="${mybatis.javaClientGenerator.Package}" targetProject="${mybatis.javaClientGenerator.Project}" type="XMLMAPPER" >
+            <property name="enableSubPackages" value="true"/>
+        </javaClientGenerator>
+
+        <!-- sql占位符，表示所有的表 -->
+        <table tableName="%">
+            <generatedKey column="id" sqlStatement="Mysql" identity="true" />
+        </table>
+
+    </context>
+</generatorConfiguration>
