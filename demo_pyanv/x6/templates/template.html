@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>X6</title>
+    <script src="https://cdn.jsdelivr.net/npm/@antv/x6/dist/x6.js"></script>
+</head>
+<body>
+    <div id="container"></div>
+    <script>
+const data = {
+  nodes: [
+    {
+      id: 'node1',
+      x: 40,
+      y: 40,
+      width: 100,
+      height: 40,
+      attrs: {
+        body: {
+          fill: '#2ECC71',
+          stroke: '#000',
+          strokeDasharray: '10,2',
+        },
+        label: {
+          text: 'Hello',
+          fill: '#333',
+          fontSize: 13,
+        }
+      }
+    },
+    {
+      id: 'node2',
+      x: 180,
+      y: 240,
+      width: 100,
+      height: 40,
+      attrs: {
+        body: {
+          fill: '#F39C12',
+          stroke: '#000',
+          rx: 16,
+          ry: 16,
+        },
+        label: {
+          text: 'World',
+          fill: '#333',
+          fontSize: 18,
+          fontWeight: 'bold',
+          fontVariant: 'small-caps',
+        },
+      },
+    },
+  ],
+  edges: [
+    {
+      source: 'node1',
+      target: 'node2',
+        shape: 'edge',
+          attrs: {
+        line: {
+          stroke: 'orange',
+        },
+    },
+    },
+  ],
+};
+      const graph = new X6.Graph({
+          container: document.getElementById('container'),
+          width: 1800,
+          height: 1600,
+          background: {
+            color: '#fffbe6', // 设置画布背景颜色
+          },
+          grid: {
+            size: 15,      // 网格大小 10px
+            visible: true, // 渲染网格背景
+            type: 'dot', // 渲染网格背景
+              args:{
+                color: '#691212', // 渲染网格背景
+            thickness: 10, // 渲染网格背景
+              },
+
+          },
+      });
+
+
+      const rect = new X6.Shape.Rect({
+  id: 'node3',
+      x: 180,
+      y: 240,
+      width: 100,
+      height: 40,
+  label: 'rect',
+  zIndex: 2,
+          attrs:{
+          rect: { // 使用 rect css 选择器替代预定义的 body 选择器
+      fill: 'red',
+      stroke: '#000',
+    },
+    text: { // 使用 text css 选择器替代预定义的 label 选择器
+      text: 'rect',
+      fill: 'green',
+      fontSize: 13,
+    },
+          },
+})
+
+const circle = new X6.Shape.Circle({
+  id: 'node4',
+  x: 280,
+  y: 200,
+  width: 60,
+  height: 60,
+  label: 'circle',
+  zIndex: 2,
+})
+
+const edge = new X6.Shape.Edge({
+  id: 'edge5',
+  source: rect,
+  target: circle,
+  zIndex: 1,
+})
+
+
+
+      graph.fromJSON(data)
+        graph.zoom(+1)//缩放
+graph.translate(20, 40)//平移
+graph.addNode(rect);
+graph.addNode(circle);
+graph.addEdge(edge);
+
+    </script>
+</body>
+</html>
