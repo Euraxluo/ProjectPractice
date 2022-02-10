@@ -165,7 +165,7 @@ pyecharts-jupyter-installer==0.0.3
 pyecharts-snapshot==0.2.0
 pyee==6.0.0
 pyflakes==2.0.0
-Pygments==2.2.0
+Pygments==2.7.4
 pylint==2.1.1
 PyMySQL==0.9.3
 pyodbc==4.0.24
